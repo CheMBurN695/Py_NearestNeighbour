@@ -5,7 +5,7 @@
     <ProjectGuid>ae5e1272-178a-459e-9575-1fec9a8e88ca</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>DSAII_C950.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,8 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DSAII_C950.py" />
     <Compile Include="HashTable.py" />
+    <Compile Include="main.py" />
     <Compile Include="Package_Module.py" />
     <Compile Include="Truck.py" />
   </ItemGroup>
