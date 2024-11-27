@@ -11,7 +11,7 @@ class MainProgram:
     def GetAllPackages(self):
         packages = []
         
-        with open("CSV Files/packageCSV") as packageCSV:
+        with open("CSV Files/packageCSV.csv") as packageCSV:
             package_reader = csv.reader(packageCSV)
             for row in package_reader:
                 package_id, address, city, state, zip_code, deadline, weight, special_notes = row
@@ -22,3 +22,5 @@ class MainProgram:
 
 main = MainProgram()
 packages = main.GetAllPackages()
+print ("Package count")
+print (packages.len)
