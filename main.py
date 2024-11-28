@@ -15,7 +15,7 @@ driverCount = 2
 maxPackageCount = 16
 trucks = []
 
-def LoadAllPackages():        
+def load_all_packages():
     with open("CSV Files/packageCSV.csv") as packageCSV:
         package_reader = csv.reader(packageCSV)
         for row in package_reader:
@@ -29,13 +29,13 @@ def LoadAllPackages():
             _package = Package(package_id, address, city, state, zip_code, deadline, weight)
             packageHashMap.add(package_id, _package)
 
-def LoadAddressData():
+def load_address_data():
     with open("CSV Files/addressCSV.csv") as addressCSV:
         reader = csv.reader(addressCSV)
         for row in reader:
             addressData.append(str.strip(row[2]))
             
-def LoadDistanceData():
+def load_distance_data():
     with open("CSV Files/distanceCSV.csv") as distanceCSV:
         reader = csv.reader(distanceCSV, delimiter=',')
         count = 0
@@ -44,58 +44,58 @@ def LoadDistanceData():
             distanceData.append(distList)
             count += 1
 
-def GetPackage(pckgID):
+def get_package(pckgID):
     return packageHashMap.get(pckgID)
 
-def GetPackageList(pckgIDList):
+def get_package_list(pckgIDList):
     packageList = []
     for pckgID in pckgIDList:
-        packageList.append(GetPackage(pckgID))
+        packageList.append(get_package(pckgID))
     return packageList
 
-def GetDistance(address1, address2):
+def get_distance(address1, address2):
     index1 = addressData.index(address1)
     index2 = addressData.index(address2)
     return distanceData[index1][index2]
 
-def CreateTrucks():    
+def create_trucks():
     for i in range(truckCount):
         trucks.append(Truck(i + 1))
 
-def LoadTrucks():
+def load_trucks():
     for i in range(len(trucks)):
         if (trucks[i].truck_ID == 1):
-            trucks[i].packages = GetPackageList([1, 13, 14, 15, 16, 20, 29, 30, 31, 34, 37, 40])
+            trucks[i].packages = get_package_list([1, 13, 14, 15, 16, 20, 29, 30, 31, 34, 37, 40])
             trucks[i].time_departed = datetime.timedelta(hours=8)
         elif (trucks[i].truck_ID == 2):
-             trucks[i].packages = GetPackageList([3, 6, 12, 17, 18, 19, 21, 22, 23, 24, 26, 27, 35, 36, 38, 39])   
+             trucks[i].packages = get_package_list([3, 6, 12, 17, 18, 19, 21, 22, 23, 24, 26, 27, 35, 36, 38, 39])
              trucks[i].time_departed = datetime.timedelta(hours=10, minutes=20)
         else:
-            trucks[i].packages = GetPackageList([2, 4, 5, 6, 7, 8, 9, 10, 11, 25, 28, 32, 33])
+            trucks[i].packages = get_package_list([2, 4, 5, 6, 7, 8, 9, 10, 11, 25, 28, 32, 33])
             trucks[i].time_departed = datetime.timedelta(hours=9, minutes=5)
 
         trucks[i].currentAddressIndex = 0
         trucks[i].mileage = 0
 
-LoadAllPackages()
-LoadAddressData()
-LoadDistanceData()
-CreateTrucks()
-LoadTrucks()
+load_all_packages()
+load_address_data()
+load_distance_data()
+create_trucks()
+load_trucks()
 
-def DoDelivery(truck):
-    packagesLoaded = truck.packages
-    for package in packagesLoaded:
+def do_delivery(truck):
+    packages_loaded = truck.packages
+    for package in packages_loaded:
         package.status = "En Route"
-    while (len(packagesLoaded) > 0):
-        minDistance = 20000
-        nearestPackage = None
-        for package in packagesLoaded:
-            distance = GetDistance(truck.currentAddressIndex, package.address)
-            if (distance < minDistance):
-                minDistance = distance
-                nearestPackage = package
+    while (len(packages_loaded) > 0):
+        min_distance = 20000
+        nearest_package = None
+        for package in packages_loaded:
+            distance = get_distance(truck.currentAddressIndex, package.addreses)
+            if (distance < min_distance):
+                min_distance = distance
+                nearest_package = package
 
     
 
-print(GetDistance("2300 Parkway Blvd", "1060 Dalton Ave S"))
+print(get_distance("2300 Parkway Blvd", "1060 Dalton Ave S"))
