@@ -118,7 +118,7 @@ def load_trucks_optimally():
                     all_packages.remove(pkg)
 
         if truck.truck_ID == 3:
-            packages_for_truck_3_ids = [6, 25, 28, 32, 39, 35, 33, 27, 26, 23, 11, 9]
+            packages_for_truck_3_ids = [25, 28, 32, 39, 35, 33, 27, 26, 23, 11, 9]
             packages_for_truck3 = get_package_list(packages_for_truck_3_ids)
             truck.packages.extend(packages_for_truck3)
             for pkg in reversed(all_packages):
@@ -163,12 +163,21 @@ def manage_truck_delivery():
 
 def do_delivery(truck):
     truck.mileage = 0
+    current_elapsed_time = truck.time_departed
+
     for package in truck.packages:
         package.status = "En Route"
-    while (len(truck.packages) > 0):
+
+    priority_packages = [package for package in truck.packages if package.deadline == "9:00 AM"]
+    if (truck.truck_ID == 2):   # truck that leaves at 9:05 AM has a different priority
+        priority_packages = [package for package in truck.packages if package.deadline == "9:00 AM" or package.deadline == "10:30 AM"]         
+    other_packages = [package for package in truck.packages if package.deadline != "9:00 AM"]
+    truck.packages = priority_packages + other_packages
+
+    while (len(priority_packages) > 0):
         min_distance = 20000
         nearest_package = None
-        for package in truck.packages:
+        for package in priority_packages:
             distance = get_distance(truck.currentAddress, package.address)
             if (distance < min_distance):
                 min_distance = distance
@@ -176,8 +185,27 @@ def do_delivery(truck):
 
         truck.mileage += min_distance
         truck.currentAddress = nearest_package.address
-        truck.packages.remove(nearest_package)
+        priority_packages.remove(nearest_package)
         truck.time_In_Transit += datetime.timedelta(minutes=(min_distance / 18) * 60)
+        current_elapsed_time += truck.time_In_Transit
+        
+        nearest_package.status = "Delivered"
+        nearest_package.delivery_time = truck.time_In_Transit + truck.time_departed
+
+    while (len(other_packages) > 0):
+        min_distance = 20000
+        nearest_package = None
+        for package in other_packages:
+            distance = get_distance(truck.currentAddress, package.address)
+            if (distance < min_distance):
+                min_distance = distance
+                nearest_package = package
+
+        truck.mileage += min_distance
+        truck.currentAddress = nearest_package.address
+        other_packages.remove(nearest_package)
+        truck.time_In_Transit += datetime.timedelta(minutes=(min_distance / 18) * 60)
+        current_elapsed_time += truck.time_In_Transit
         
         nearest_package.status = "Delivered"
         nearest_package.delivery_time = truck.time_In_Transit + truck.time_departed
@@ -194,46 +222,65 @@ def get_package_status_at_time(package_id, current_time):
         else:
             return "En Route"
 
-def get_package_deadline_breached(package_id):
+def get_package_deadline_breached(package_id, current_time):
     nine_deadline = datetime.timedelta(hours=9)
     ten_deadline = datetime.timedelta(hours=10, minutes=30)
     package = get_package(package_id)
+    
     if package is None:
-        #display error
+        print(f"Package ID {package_id} not found.")
         return None
-    if (package.deadline == "10:30 AM" and package.delivery_time > ten_deadline):
-        return True
-    elif (package.deadline == "9:00 AM" and package.delivery_time > nine_deadline):
+
+    if package.deadline == "10:30 AM":
+        deadline = ten_deadline
+    elif package.deadline == "9:00 AM":
+        deadline = nine_deadline
+    else:
+        return False
+
+    # If the current time is earlier than the deadline, it is not breached
+    if current_time < deadline:
+        return False
+
+    # Otherwise, check if the package's delivery time exceeds the deadline
+    if package.delivery_time > deadline:
         return True
     else:
         return False
 
 
+
 def run_UI():
 
-    print("\n--- WGUPS Package Delivery System ---")
-    print("View package status at a specific time.")
+    while True:
+        print("\n--- WGUPS Package Delivery System ---")
+        print("View package status at a specific time")
 
-    user_time_input = input("Enter the time (HH:MM): ")
-    try:
-        user_time = datetime.datetime.strptime(user_time_input, "%H:%M")
-    except ValueError:
-        print("Invalid time format. Please try again.")
-        return
+        user_time_input = input("Enter the time (HH:MM): ")
+        if user_time_input.lower() == 'exit':
+            print("Exiting the program.")
+            break
+        try:
+            user_time = datetime.datetime.strptime(user_time_input, "%H:%M")
+        except ValueError:
+            print("Invalid time format. Please try again.")
+            return
 
-    usertime_delta = datetime.timedelta(hours=user_time.hour, minutes=user_time.minute)
+        usertime_delta = datetime.timedelta(hours=user_time.hour, minutes=user_time.minute)
 
-    total_mileage = 0
-    for truck in trucks:
-        print(f"\nTruck {truck.truck_ID}:")
-        for package in all_package_list:
-            if (package.truck_loaded_to == truck.truck_ID):
-                delivery_time = package.delivery_time
-                package_status = get_package_status_at_time(package.id, usertime_delta)
-                print(f"Package ID: {package.id}, Address: {package.address}, Status: {package_status}, Deadline: {package.deadline}, Deadline Breached: {get_package_deadline_breached(package.id)}")
-        total_mileage += truck.mileage
+        total_mileage = 0
+        for truck in trucks:
+            print(f"\nTruck {truck.truck_ID}:")
+            for package in all_package_list:
+                if (package.truck_loaded_to == truck.truck_ID):
+                    delivery_time = package.delivery_time
+                    package_status = get_package_status_at_time(package.id, usertime_delta)
+                    if (usertime_delta < delivery_time):
+                        delivery_time = "Pending delivery"
+                    print(f"Package ID: {package.id}, Address: {package.address}, Status: {package_status}, Delivered At: {delivery_time}, Deadline Breached: {get_package_deadline_breached(package.id,usertime_delta)}")
+            total_mileage += truck.mileage
 
-    print(f"\nTotal Mileage of All Trucks: {total_mileage:.2f} miles")
+        print(f"\nTotal Mileage of All Trucks: {total_mileage:.2f} miles")
 
 load_all_packages()
 load_address_data()
