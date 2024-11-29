@@ -187,9 +187,10 @@ def do_delivery(truck):
 
     #split between priorities and non-priorities to ensure deadlines are met
     priority_packages = [package for package in truck.packages if package.deadline == "9:00 AM"]
+    other_packages = [package for package in truck.packages if package.deadline != "9:00 AM"]
     if (truck.truck_ID == 2):   # truck that leaves at 9:05 AM has a different priority
         priority_packages = [package for package in truck.packages if package.deadline == "9:00 AM" or package.deadline == "10:30 AM"]         
-    other_packages = [package for package in truck.packages if package.deadline != "9:00 AM"]
+        other_packages = [package for package in truck.packages if package.deadline == "EOD"]
     truck.packages = priority_packages + other_packages
 
     # Deliver all priority packages
