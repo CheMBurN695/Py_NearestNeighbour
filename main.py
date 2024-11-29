@@ -8,6 +8,7 @@ from Truck_Module import Truck
 from Package_Module import Package
 
 packageHashMap = HashMap()
+all_package_list = []
 distanceData = []
 addressData = []
 truckCount = 3
@@ -27,6 +28,7 @@ def load_all_packages():
             weight = row[6]
             _package = Package(package_id, address, city, state, zip_code, deadline, weight)
             packageHashMap.add(package_id, _package)        
+            all_package_list.append(_package)
 
 def load_address_data():
     with open("CSV Files/addressCSV.csv") as addressCSV:
@@ -67,20 +69,90 @@ def get_distance(address1, address2):
 def create_trucks():
     for i in range(truckCount):
         trucks.append(Truck(i + 1))
-
-def load_trucks():
-    for i in range(len(trucks)):
-        if (trucks[i].truck_ID == 1):
-            trucks[i].packages = get_package_list([1, 13, 14, 15, 16, 19, 20, 30, 31, 34, 37, 40])
-            trucks[i].time_departed = datetime.timedelta(hours=8)
-        elif (trucks[i].truck_ID == 2):
-             trucks[i].packages = get_package_list([3, 6, 12, 17, 18, 21, 22, 23, 24, 26, 27, 29, 35, 36, 38, 39])
-             trucks[i].time_departed = datetime.timedelta(hours=10, minutes=20)
-        else:
-            trucks[i].packages = get_package_list([2, 4, 5, 6, 7, 8, 9, 10, 11, 25, 28, 32, 33])
-            trucks[i].time_departed = datetime.timedelta(hours=9, minutes=5)
-
         trucks[i].time_In_Transit = datetime.timedelta()
+    trucks[0].time_departed = datetime.timedelta(hours=8)
+    trucks[1].time_departed = datetime.timedelta(hours=9, minutes=5)
+    trucks[2].time_departed = datetime.timedelta(hours=10, minutes=20)
+
+# def load_trucks():
+#     for i in range(len(trucks)):
+#         if (trucks[i].truck_ID == 1):
+#             trucks[i].packages = get_package_list([1, 13, 14, 15, 16, 19, 20, 30, 31, 34, 37, 40])
+#             trucks[i].time_departed = datetime.timedelta(hours=8)
+#         elif (trucks[i].truck_ID == 2):
+#              trucks[i].packages = get_package_list([3, 6, 12, 17, 18, 21, 22, 23, 24, 26, 27, 29, 35, 36, 38, 39])
+#              trucks[i].time_departed = datetime.timedelta(hours=10, minutes=20)
+#         else:
+#             trucks[i].packages = get_package_list([2, 4, 5, 6, 7, 8, 9, 10, 11, 25, 28, 32, 33])
+#             trucks[i].time_departed = datetime.timedelta(hours=9, minutes=5)
+
+        
+
+def get_package_closest_to_address(address):
+    min_distance = 20000
+    nearest_package = None
+    for package in all_package_list:
+        distance = get_distance(address, package.address)
+        if (distance < min_distance):
+            min_distance = distance
+            nearest_package = package
+    return nearest_package
+
+def get_package_closest_to_address_custom(address, package_list):
+    min_distance = 20000
+    nearest_package = None
+    for package in package_list:
+        distance = get_distance(address, package.address)
+        if (distance < min_distance):
+            min_distance = distance
+            nearest_package = package
+    return nearest_package
+
+def load_trucks_optimally():
+    all_packages = list(all_package_list)
+
+    # load statics
+    for truck in trucks:
+        if truck.truck_ID == 2:
+            packages_for_truck_2_ids = [3, 18, 36, 38]
+            packages_for_truck2 = get_package_list(packages_for_truck_2_ids)
+            truck.packages.extend(packages_for_truck2)            
+            for pkg in reversed(all_packages):
+                if (packages_for_truck2.__contains__(pkg)):
+                    all_packages.remove(pkg)
+
+        if truck.truck_ID == 3:
+            packages_for_truck_3_ids = [6, 25, 28, 32]
+            packages_for_truck3 = get_package_list(packages_for_truck_3_ids)
+            truck.packages.extend(packages_for_truck3)
+            for pkg in reversed(all_packages):
+                if (packages_for_truck3.__contains__(pkg)):
+                    all_packages.remove(pkg)
+
+        if truck.truck_ID == 1:
+            packages_for_truck_3_ids = [13, 15, 19, 32, 1, 29, 30, 31, 34, 37, 40]
+            packages_for_truck3 = get_package_list(packages_for_truck_3_ids)
+            truck.packages.extend(packages_for_truck3)
+            for pkg in reversed(all_packages):
+                if (packages_for_truck3.__contains__(pkg)):
+                    all_packages.remove(pkg)
+
+    for truck in trucks:
+        # only get from packages in truck to find the starting package
+        package_closest_to_hub = get_package_closest_to_address_custom(truck.currentAddress, truck.packages)
+        current_package = package_closest_to_hub
+        while (len(truck.packages) < 16 & len(truck.packages) > 0):
+            if (current_package is None):
+                break
+            next_package = get_package_closest_to_address_custom(current_package.address, all_packages)
+            truck.packages.append(next_package)
+            all_packages.remove(next_package)
+            current_package = next_package
+
+    # print(len(trucks[1].packages))
+    # print(len(all_packages))
+
+
 
 def manage_truck_delivery():
     do_delivery(trucks[0])
@@ -119,10 +191,12 @@ load_all_packages()
 load_address_data()
 load_distance_data()
 create_trucks()
-load_trucks()
+load_trucks_optimally()
 manage_truck_delivery()
 
-
-# print(trucks[0].mileage)
-# print(trucks[1].mileage)
-# print(trucks[2].mileage)
+print(trucks[0].mileage + trucks[1].mileage + trucks[2].mileage)
+print(trucks[1].mileage)
+print(trucks[2].mileage)
+print(trucks[0].time_In_Transit + trucks[0].time_departed)
+print(trucks[1].time_In_Transit + trucks[1].time_departed)
+print(trucks[2].time_In_Transit + trucks[2].time_departed)
