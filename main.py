@@ -271,7 +271,14 @@ def get_package_deadline_breached(package_id, current_time):
     else:
         return False
 
-
+# Helper function to change the address of a package
+def change_package_address(package_id, new_address):
+    package = get_package(package_id)
+    if package is None:
+        print(f"Package ID {package_id} not found.")
+        return None
+    package.address = new_address
+    packageHashMap.add(package_id, package)
 
 # User Interface to view package status at a specific time
 def run_UI():
@@ -311,6 +318,9 @@ def run_UI():
                         package_status = get_package_status_at_time(package.id, usertime_delta)
                         if usertime_delta < delivery_time:
                             delivery_time = "Pending delivery"
+                        # If time is greater than 10:30 AM, change package #9 to address 410 S State St
+                        if usertime_delta > datetime.timedelta(hours=10, minutes=20):
+                            change_package_address(9, "410 S State St")
                         print(f"Package ID: {package.id}, Address: {package.address}, Status: {package_status}, Delivered At: {delivery_time}, Deadline Breached: {get_package_deadline_breached(package.id, usertime_delta)}")
         else:
             print("Invalid choice. Please enter '1', '2', or 'exit'.")
