@@ -1,6 +1,3 @@
-# Student ID - 012279499
-# Pasindu De Silva
-
 import csv
 import datetime
 from HashTable import HashMap
@@ -283,7 +280,7 @@ def change_package_address(package_id, new_address):
 # User Interface to view package status at a specific time
 def run_UI():
     while True:
-        print("\n--- WGUPS Package Delivery System ---")
+        print("\n--- Package Delivery System ---")
         print("1. View total mileage of all trucks")
         print("2. View package status at a specific time")
         print("Enter 'exit' to quit the program.")
