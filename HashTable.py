@@ -1,3 +1,5 @@
+#Hash Table class that will be used to store the packages and their information
+
 class HashMap:
     def __init__(self):
         self.size = 200;
